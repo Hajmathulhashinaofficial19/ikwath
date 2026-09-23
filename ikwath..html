@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>iKwath - Smart Ayurvedic Kwatha Appliance (SIH26048)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Cinzel:wght@600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Plus Jakarta Sans', 'sans-serif'],
+            heading: ['Cinzel', 'serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            ayur: {
+              50: '#f0fdf4',
+              100: '#dcfce7',
+              500: '#10b981',
+              600: '#059669',
+              800: '#065f46',
+              900: '#064e3b',
+              950: '#022c22',
+            },
+            gold: {
+              400: '#fbbf24',
+              500: '#f59e0b',
+              600: '#d97706',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #050b07;
+      color: #e2e8f0;
+    }
+    .glass-card {
+      background: rgba(10, 20, 14, 0.75);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(52, 211, 153, 0.18);
+      box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
+    }
+    .glass-card-hover {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .glass-card-hover:hover {
+      border-color: rgba(52, 211, 153, 0.45);
+      box-shadow: 0 12px 40px 0 rgba(16, 185, 129, 0.2);
+      transform: translateY(-2px);
+    }
+    .gradient-text {
+      background: linear-gradient(135deg, #34d399 0%, #10b981 50%, #059669 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .gold-gradient-text {
+      background: linear-gradient(135deg, #fde047 0%, #f59e0b 50%, #d97706 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .active-tab {
+      background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+      color: #ffffff !important;
+      border-color: #34d399 !important;
+      box-shadow: 0 4px 14px 0 rgba(16, 185, 129, 0.39);
+    }
+    .pod-card-active {
+      border-color: #10b981 !important;
+      background: rgba(6, 78, 59, 0.5) !important;
+      box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
+    }
+    .cup-btn-active {
+      border-color: #f59e0b !important;
+      background: rgba(180, 83, 9, 0.4) !important;
+      color: #fef08a !important;
+    }
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #050b07; }
+    ::-webkit-scrollbar-thumb { background: #065f46; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #10b981; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between antialiased selection:bg-emerald-500 selection:text-white">
+
+  <!-- Interactive Modal Drawer for API/AFI Standards -->
+  <div id="api-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+    <div class="glass-card max-w-2xl w-full p-6 rounded-2xl border border-emerald-500/30 space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-emerald-800/60 pb-3">
+        <h3 class="font-heading text-xl font-bold text-emerald-400 flex items-center space-x-2">
+          <i class="fa-solid fa-book-bookmark"></i>
+          <span>AFI / API Decoction Compliance Standards</span>
+        </h3>
+        <button onclick="toggleModal('api-modal')" class="text-slate-400 hover:text-white text-xl p-1"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="space-y-3 text-xs text-slate-300 leading-relaxed">
+        <p><strong class="text-white">Ayurvedic Formulary of India (AFI), Part I Guidelines:</strong> Standard Kwatha preparation requires boiling coarse herb powder (<span class="italic text-amber-300">Yavakūṭa Cūrṇa</span>) with 4 to 16 parts of clean water until reduced to specified ratio (commonly 1/4th of initial volume).</p>
+        <p><strong class="text-white">Closed-Loop Precision Engineering:</strong> iKwath eliminates volatile phytochemical loss by utilizing low-pressure reflux condensing and PID thermal management ($85^\circ\text{C}-90^\circ\text{C}$) instead of open-flame degradation.</p>
+        <div class="p-3 bg-slate-950 rounded-xl border border-emerald-900/60 font-mono text-[11px] text-emerald-300">
+          Target Ratio: 1 Part Herb : 16 Parts $H_2O$ &rarr; Reduced to 4 Parts (25% Endpoint)
+        </div>
+      </div>
+      <div class="text-right pt-2">
+        <button onclick="toggleModal('api-modal')" class="px-5 py-2 rounded-xl bg-emerald-600 font-bold text-white text-xs hover:bg-emerald-500 transition-all">Close Guide</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Header Navigation -->
+  <header class="sticky top-0 z-40 glass-card border-b border-emerald-900/40 px-4 lg:px-8 py-3.5">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 via-teal-500 to-emerald-400 flex items-center justify-center shadow-lg shadow-emerald-900/50">
+          <i class="fa-solid fa-leaf text-slate-950 text-xl"></i>
+        </div>
+        <div>
+          <span class="font-heading text-2xl font-bold tracking-wider text-white">iKwath</span>
+          <span class="text-[10px] block text-emerald-400 font-semibold tracking-widest uppercase">Smart Ayurvedic Appliance</span>
+        </div>
+      </div>
+
+      <nav class="hidden md:flex items-center space-x-8 text-xs font-semibold uppercase tracking-wider">
+        <a href="#simulator" class="hover:text-emerald-400 transition-colors text-emerald-300 flex items-center space-x-1.5"><i class="fa-solid fa-microchip"></i> <span>Live Simulator</span></a>
+        <a href="#architecture" class="hover:text-emerald-400 transition-colors text-slate-300 flex items-center space-x-1.5"><i class="fa-solid fa-diagram-project"></i> <span>Hardware & Software</span></a>
+        <a href="#feasibility" class="hover:text-emerald-400 transition-colors text-slate-300 flex items-center space-x-1.5"><i class="fa-solid fa-chart-line"></i> <span>Feasibility</span></a>
+        <button onclick="toggleModal('api-modal')" class="hover:text-emerald-400 transition-colors text-amber-400 flex items-center space-x-1.5"><i class="fa-solid fa-certificate"></i> <span>AFI Standards</span></button>
+      </nav>
+
+      <div class="flex items-center space-x-3">
+        <span class="px-3 py-1.5 rounded-full text-[11px] font-mono font-bold bg-emerald-950 border border-emerald-500/40 text-emerald-300 shadow-inner">
+          SIH26048 | Techronauts
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12 flex-grow">
+
+    <!-- Hero Banner Section -->
+    <section class="relative rounded-3xl overflow-hidden glass-card p-8 lg:p-12 border border-emerald-500/30 shadow-2xl">
+      <div class="absolute -top-32 -right-32 w-96 h-96 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="absolute -bottom-32 -left-32 w-96 h-96 bg-amber-500/15 rounded-full blur-3xl pointer-events-none"></div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+        <div class="lg:col-span-7 space-y-6">
+          <div class="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 text-xs font-semibold">
+            <i class="fa-solid fa-bolt text-amber-400"></i>
+            <span>Interactive Real-time Embedded Hardware Visualizer</span>
+          </div>
+
+          <h1 class="font-heading text-3xl sm:text-5xl font-extrabold text-white leading-tight">
+            Precision Ayurveda. <br/>
+            <span class="gradient-text">Automated Fresh Kwatha.</span>
+          </h1>
+
+          <p class="text-slate-300 text-sm sm:text-base leading-relaxed">
+            The world's first pod-based smart appliance designed to extract classical <span class="text-amber-300 font-semibold italic">Yavakūṭa Cūrṇa</span> decoctions. Features automated $1/4\text{th}$ volume mass sensors, closed-loop PID thermal control, and multi-serve dispensing.
+          </p>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div class="p-3 rounded-xl bg-slate-950/60 border border-emerald-800/50 text-center">
+              <span class="block text-xl font-extrabold text-emerald-400 font-mono">1/4 Vol</span>
+              <span class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">HX711 Load Cell</span>
+            </div>
+            <div class="p-3 rounded-xl bg-slate-950/60 border border-emerald-800/50 text-center">
+              <span class="block text-xl font-extrabold text-amber-400 font-mono">85-90°C</span>
+              <span class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">PID Heating</span>
+            </div>
+            <div class="p-3 rounded-xl bg-slate-950/60 border border-emerald-800/50 text-center">
+              <span class="block text-xl font-extrabold text-emerald-400 font-mono">SS 316</span>
+              <span class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Medical Grade</span>
+            </div>
+            <div class="p-3 rounded-xl bg-slate-950/60 border border-emerald-800/50 text-center">
+              <span class="block text-xl font-extrabold text-amber-400 font-mono">STM32</span>
+              <span class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">32-Bit MCU</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="lg:col-span-5 flex justify-center">
+          <div class="relative w-full max-w-sm rounded-2xl p-6 bg-slate-950/90 border border-emerald-500/30 text-center space-y-4 shadow-2xl">
+            <div class="w-16 h-16 mx-auto rounded-2xl bg-emerald-950 border border-emerald-400/40 flex items-center justify-center">
+              <i class="fa-solid fa-mug-hot text-3xl text-amber-400"></i>
+            </div>
+            <div>
+              <h3 class="font-heading text-lg font-bold text-white">Live System Hardware</h3>
+              <p class="text-xs text-slate-400">SIH 2026 Problem Statement ID: SIH26048</p>
+            </div>
+            <div class="p-3 rounded-xl bg-emerald-950/40 border border-emerald-900/60 text-left space-y-1.5 text-xs">
+              <div class="flex justify-between text-slate-300"><span>Reservoir:</span> <span class="font-mono text-emerald-400">1200 mL Water Tank</span></div>
+              <div class="flex justify-between text-slate-300"><span>Extraction End:</span> <span class="font-mono text-amber-400">Auto Weight Sensor</span></div>
+              <div class="flex justify-between text-slate-300"><span>Dispensing:</span> <span class="font-mono text-emerald-400">1 to 4 Cups On-Demand</span></div>
+            </div>
+            <a href="#simulator" class="inline-block w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-slate-950 font-extrabold hover:from-emerald-400 hover:to-teal-500 transition-all shadow-lg text-xs tracking-wider uppercase">
+              Launch Live Simulator Below <i class="fa-solid fa-chevron-down ml-1"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MAIN SIMULATOR SECTION -->
+    <section id="simulator" class="space-y-6">
+      <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <span class="text-xs font-bold text-emerald-400 uppercase tracking-widest flex items-center space-x-1">
+            <i class="fa-solid fa-play text-amber-400"></i> <span>Interactive Demo</span>
+          </span>
+          <h2 class="font-heading text-2xl sm:text-3xl font-bold text-white">Smart Kwatha Appliance Simulator</h2>
+        </div>
+        <div class="flex space-x-2 bg-slate-950 p-1.5 rounded-2xl border border-slate-800">
+          <button id="btn-mode-prep" onclick="switchStage('prep')" class="px-4 py-2 rounded-xl text-xs font-bold border transition-all active-tab flex items-center space-x-1.5">
+            <i class="fa-solid fa-gear"></i> <span>Stage 1: Prep & Decoction</span>
+          </button>
+          <button id="btn-mode-dispense" onclick="switchStage('dispense')" class="px-4 py-2 rounded-xl text-xs font-bold border border-transparent text-slate-400 hover:text-white transition-all flex items-center space-x-1.5">
+            <i class="fa-solid fa-faucet-drip"></i> <span>Stage 2: Dispensing</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+
+        <!-- Visual Canvas Engine Column -->
+        <div class="lg:col-span-7 glass-card p-5 rounded-2xl border border-emerald-500/20 space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div class="flex items-center space-x-2">
+              <span id="status-indicator-dot" class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span class="text-xs font-semibold text-slate-200" id="sys-status-text">System Ready • Standby</span>
+            </div>
+            <div class="flex space-x-3 text-xs font-mono">
+              <span class="text-amber-400" id="sys-temp-display"><i class="fa-solid fa-temperature-high"></i> 25.0°C</span>
+              <span class="text-sky-400" id="sys-weight-display"><i class="fa-solid fa-weight-scale"></i> 0g Mass</span>
+            </div>
+          </div>
+
+          <!-- Animated HTML5 Canvas Schematics Engine -->
+          <div class="relative w-full h-[360px] bg-slate-950 rounded-xl border border-emerald-900/50 overflow-hidden shadow-inner">
+            <canvas id="appliance-canvas" class="w-full h-full block"></canvas>
+            
+            <!-- Canvas Overlay Tooltips -->
+            <div class="absolute top-3 left-3 bg-slate-900/90 backdrop-blur-md p-2.5 rounded-lg border border-slate-800 text-[10px] text-slate-300 font-mono space-y-1 pointer-events-none">
+              <div class="flex items-center space-x-2"><span class="w-2 h-2 rounded-full bg-amber-400"></span> <span>Extraction Chamber: <strong id="chamber-vol-readout">0 mL</strong></span></div>
+              <div class="flex items-center space-x-2"><span class="w-2 h-2 rounded-full bg-emerald-400"></span> <span>Storage Reservoir: <strong id="storage-vol-readout">0 mL</strong></span></div>
+            </div>
+          </div>
+
+          <!-- PID Temperature Curve Live Canvas Graph -->
+          <div class="bg-slate-950/80 p-3 rounded-xl border border-slate-800 space-y-1">
+            <div class="flex justify-between text-[10px] font-mono text-slate-400">
+              <span>PID Thermal Graph (°C vs Time)</span>
+              <span class="text-emerald-400" id="graph-pid-target">Target Range: 85°C - 90°C</span>
+            </div>
+            <canvas id="pid-graph-canvas" class="w-full h-16 block"></canvas>
+          </div>
+
+          <!-- Microcontroller Real-time Log Console -->
+          <div class="p-3 rounded-xl bg-slate-950 font-mono text-[11px] border border-slate-800 text-emerald-400 flex items-center justify-between">
+            <span id="log-console">&gt; STM32 Controller initialized. Select Pod and start brewing cycle.</span>
+            <span class="text-[10px] text-slate-500">HX711 24-Bit Active</span>
+          </div>
+        </div>
+
+        <!-- Controls & Customization Panel Column -->
+        <div class="lg:col-span-5 space-y-6">
+
+          <!-- STAGE 1 PREPARATION CONTROLS -->
+          <div id="panel-prep" class="glass-card p-6 rounded-2xl border border-emerald-500/20 space-y-5">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+              <h3 class="font-heading text-lg font-bold text-white">Stage 1: Decoction Cycle</h3>
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950 border border-emerald-700 text-emerald-300">AFI Standard 1/4th</span>
+            </div>
+
+            <!-- Pod Selection -->
+            <div class="space-y-2">
+              <label class="text-xs font-semibold text-slate-300">1. Select Formulation Pod (<span class="italic text-amber-300">Yavakūṭa Cūrṇa</span>)</label>
+              <div class="grid grid-cols-3 gap-2">
+                <button onclick="selectPod('immunity')" id="pod-immunity" class="p-3 rounded-xl border border-emerald-500 bg-emerald-950/50 text-left hover:border-emerald-400 transition-all pod-card-active">
+                  <div class="text-xs font-bold text-emerald-300">Immunity</div>
+                  <div class="text-[9px] text-slate-400">Giloy, Tulsi</div>
+                  <div class="text-[9px] text-amber-400 font-mono mt-1">400mL &rarr; 88°C</div>
+                </button>
+                <button onclick="selectPod('digestive')" id="pod-digestive" class="p-3 rounded-xl border border-slate-800 bg-slate-900/60 text-left hover:border-emerald-400 transition-all">
+                  <div class="text-xs font-bold text-white">Digestive</div>
+                  <div class="text-[9px] text-slate-400">Trikatu, Shunthi</div>
+                  <div class="text-[9px] text-amber-400 font-mono mt-1">380mL &rarr; 85°C</div>
+                </button>
+                <button onclick="selectPod('respiratory')" id="pod-respiratory" class="p-3 rounded-xl border border-slate-800 bg-slate-900/60 text-left hover:border-emerald-400 transition-all">
+                  <div class="text-xs font-bold text-white">Respiratory</div>
+                  <div class="text-[9px] text-slate-400">Vasa, Mulethi</div>
+                  <div class="text-[9px] text-amber-400 font-mono mt-1">420mL &rarr; 90°C</div>
+                </button>
+              </div>
+            </div>
+
+            <!-- Cycle Parameters Summary -->
+            <div class="bg-slate-950/80 p-3.5 rounded-xl border border-slate-800 space-y-2 text-xs font-mono">
+              <div class="flex justify-between"><span class="text-slate-400">Initial Water Vol:</span> <span id="param-water" class="text-sky-400 font-bold">400 mL</span></div>
+              <div class="flex justify-between"><span class="text-slate-400">Thermal Target:</span> <span id="param-temp" class="text-amber-400 font-bold">88.0°C (PID)</span></div>
+              <div class="flex justify-between"><span class="text-slate-400">Endpoint Volume:</span> <span class="text-emerald-400 font-bold">100 mL (1/4th Reduction)</span></div>
+              <div class="flex justify-between"><span class="text-slate-400">Filter Assembly:</span> <span class="text-slate-300">Food-Grade SS 316 Mesh</span></div>
+            </div>
+
+            <!-- Start Process Button -->
+            <button id="btn-start-prep" onclick="startDecoctionCycle()" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 font-extrabold text-slate-950 hover:from-emerald-400 hover:to-teal-500 transition-all shadow-lg text-xs uppercase tracking-wider flex items-center justify-center space-x-2">
+              <i class="fa-solid fa-play"></i>
+              <span>Start Automated Prep & Storage</span>
+            </button>
+          </div>
+
+          <!-- STAGE 2 DISPENSING CONTROLS -->
+          <div id="panel-dispense" class="glass-card p-6 rounded-2xl border border-emerald-500/20 space-y-5 hidden">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+              <h3 class="font-heading text-lg font-bold text-white">Stage 2: On-Demand Dispenser</h3>
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-sky-950 border border-sky-700 text-sky-300">Metered Dispense</span>
+            </div>
+
+            <!-- Servings Selector -->
+            <div class="space-y-2">
+              <label class="text-xs font-semibold text-slate-300">1. Choose Serving Quantity</label>
+              <div class="grid grid-cols-4 gap-2">
+                <button onclick="selectCupCount(1)" id="cup-1" class="py-2.5 rounded-xl border font-bold text-xs cup-btn-active">1 Cup</button>
+                <button onclick="selectCupCount(2)" id="cup-2" class="py-2.5 rounded-xl border border-slate-800 bg-slate-900/60 font-bold text-xs text-slate-300">2 Cups</button>
+                <button onclick="selectCupCount(3)" id="cup-3" class="py-2.5 rounded-xl border border-slate-800 bg-slate-900/60 font-bold text-xs text-slate-300">3 Cups</button>
+                <button onclick="selectCupCount(4)" id="cup-4" class="py-2.5 rounded-xl border border-slate-800 bg-slate-900/60 font-bold text-xs text-slate-300">4 Cups</button>
+              </div>
+            </div>
+
+            <!-- Custom Concentration Ratio Slider -->
+            <div class="space-y-2">
+              <label class="text-xs font-semibold text-slate-300">2. Concentration Strength & Dilution</label>
+              <div class="bg-slate-950/80 p-3.5 rounded-xl border border-slate-800 space-y-3 text-xs">
+                <div>
+                  <div class="flex justify-between mb-1.5 font-mono">
+                    <span class="text-slate-400">Ratio:</span>
+                    <span class="text-amber-400 font-bold" id="dilution-label">1:1 Pure Decoction</span>
+                  </div>
+                  <input type="range" min="1" max="3" value="1" id="slider-dilution" oninput="onDilutionChange(this.value)" class="w-full accent-emerald-500 cursor-pointer">
+                </div>
+                <div class="flex justify-between items-center pt-2 border-t border-slate-800 font-mono text-[11px]">
+                  <span class="text-slate-400">Hot Water Chamber:</span>
+                  <span class="text-sky-400">Ready @ 92.0°C</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <button id="btn-start-dispense" onclick="startDispensingCycle()" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 font-extrabold text-slate-950 hover:from-amber-400 hover:to-orange-500 transition-all shadow-lg text-xs uppercase tracking-wider flex items-center justify-center space-x-2">
+              <i class="fa-solid fa-mug-hot"></i>
+              <span>Dispense Fresh Kwatha</span>
+            </button>
+
+            <button onclick="startAutoRinse()" class="w-full py-2.5 rounded-xl bg-slate-900 border border-slate-700 hover:border-slate-500 text-xs font-semibold text-slate-300 transition-all flex items-center justify-center space-x-2">
+              <i class="fa-solid fa-shower text-teal-400"></i>
+              <span>Run Automated Rinse & Sanitization Cycle</span>
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- INTERACTIVE HARDWARE COMPONENT EXPLODER -->
+    <section id="architecture" class="space-y-6">
+      <div class="text-center max-w-2xl mx-auto space-y-2">
+        <span class="text-xs font-bold text-emerald-400 uppercase tracking-widest">Hardware & Embedded Architecture</span>
+        <h2 class="font-heading text-2xl sm:text-3xl font-bold text-white">Explore Internal Components</h2>
+        <p class="text-xs text-slate-400">Click or hover over any hardware block to inspect pinouts and engineering specifications.</p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+
+        <div onclick="showHardwareSpec('mcu')" class="glass-card p-5 rounded-2xl border border-emerald-500/20 glass-card-hover cursor-pointer space-y-3">
+          <div class="w-10 h-10 rounded-xl bg-emerald-950 border border-emerald-500/40 flex items-center justify-center text-emerald-400 text-xl"><i class="fa-solid fa-microchip"></i></div>
+          <h4 class="font-bold text-sm text-white">STM32 Microcontroller</h4>
+          <p class="text-xs text-slate-400">32-bit ARM Cortex M4 processor running closed-loop state machine & thermal control.</p>
+          <div class="text-[10px] font-mono text-emerald-400 font-semibold">Inspect Spec &rarr;</div>
+        </div>
+
+        <div onclick="showHardwareSpec('loadcell')" class="glass-card p-5 rounded-2xl border border-emerald-500/20 glass-card-hover cursor-pointer space-y-3">
+          <div class="w-10 h-10 rounded-xl bg-emerald-950 border border-emerald-500/40 flex items-center justify-center text-amber-400 text-xl"><i class="fa-solid fa-scale-balanced"></i></div>
+          <h4 class="font-bold text-sm text-white">HX711 Mass Sensor</h4>
+          <p class="text-xs text-slate-400">24-bit ADC coupled with load cells to continuously track liquid evaporation down to 1/4th.</p>
+          <div class="text-[10px] font-mono text-amber-400 font-semibold">Inspect Spec &rarr;</div>
+        </div>
+
+        <div onclick="showHardwareSpec('chamber')" class="glass-card p-5 rounded-2xl border border-emerald-500/20 glass-card-hover cursor-pointer space-y-3">
+          <div class="w-10 h-10 rounded-xl bg-emerald-950 border border-emerald-500/40 flex items-center justify-center text-sky-400 text-xl"><i class="fa-solid fa-vial"></i></div>
+          <h4 class="font-bold text-sm text-white">SS 316 Extraction Tank</h4>
+          <p class="text-xs text-slate-400">Food-grade non-reactive stainless steel chamber with integrated heating element.</p>
+          <div class="text-[10px] font-mono text-sky-400 font-semibold">Inspect Spec &rarr;</div>
+        </div>
+
+        <div onclick="showHardwareSpec('pumps')" class="glass-card p-5 rounded-2xl border border-emerald-500/20 glass-card-hover cursor-pointer space-y-3">
+          <div class="w-10 h-10 rounded-xl bg-emerald-950 border border-emerald-500/40 flex items-center justify-center text-teal-400 text-xl"><i class="fa-solid fa-gears"></i></div>
+          <h4 class="font-bold text-sm text-white">Metered Peristaltic Pumps</h4>
+          <p class="text-xs text-slate-400">Precision dosing pumps for exact cup volume dispensing and dilution ratios.</p>
+          <div class="text-[10px] font-mono text-teal-400 font-semibold">Inspect Spec &rarr;</div>
+        </div>
+
+      </div>
+
+      <!-- Spec Display Drawer -->
+      <div id="spec-detail-box" class="glass-card p-5 rounded-2xl border border-emerald-500/30 text-xs font-mono space-y-2 hidden">
+        <div class="flex justify-between items-center">
+          <strong id="spec-title" class="text-sm font-bold text-white">Component Specification</strong>
+          <span class="text-emerald-400">Active Module</span>
+        </div>
+        <p id="spec-desc" class="text-slate-300 font-sans"></p>
+      </div>
+    </section>
+
+    <!-- FEASIBILITY & MITIGATION MATRIX -->
+    <section id="feasibility" class="space-y-6">
+      <div class="text-center max-w-2xl mx-auto space-y-2">
+        <span class="text-xs font-bold text-amber-400 uppercase tracking-widest">SIH 2026 Feasibility Report</span>
+        <h2 class="font-heading text-2xl sm:text-3xl font-bold text-white">Technical Challenges & Mitigations</h2>
+      </div>
+
+      <div class="glass-card p-6 rounded-2xl border border-emerald-500/20 overflow-x-auto">
+        <table class="w-full text-left text-xs text-slate-300">
+          <thead>
+            <tr class="border-b border-emerald-800/80 text-emerald-400 font-mono text-[11px] uppercase tracking-wider bg-emerald-950/40">
+              <th class="p-3">Challenge Area</th>
+              <th class="p-3">Engineering Mitigation</th>
+              <th class="p-3">Pharmacopoeial Result</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-800/60 font-sans">
+            <tr>
+              <td class="p-3 font-semibold text-white">Thermal Degradation</td>
+              <td class="p-3 text-slate-300">PID-controlled low-wattage heating capped at $85-90^\circ\text{C}$ prevent over-boiling.</td>
+              <td class="p-3 text-emerald-400">Preserves heat-sensitive active phytochemicals & essential oils.</td>
+            </tr>
+            <tr>
+              <td class="p-3 font-semibold text-white">Volumetric Consistency</td>
+              <td class="p-3 text-slate-300">HX711 24-bit load cell algorithm detecting exact 1/4th mass reduction threshold.</td>
+              <td class="p-3 text-emerald-400">Ensures dosage accuracy matching classical AFI monographs.</td>
+            </tr>
+            <tr>
+              <td class="p-3 font-semibold text-white">Cross-Contamination</td>
+              <td class="p-3 text-slate-300">Automatic hot water flush cycle and removable dishwasher-safe SS 316 pot.</td>
+              <td class="p-3 text-emerald-400">Guarantees zero taste or herb residue transfer between pods.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-emerald-900/40 bg-slate-950 text-slate-400 text-xs py-6">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center space-x-2">
+        <i class="fa-solid fa-leaf text-emerald-400"></i>
+        <span class="font-bold text-white">iKwath Appliance Engine</span>
+        <span>• Smart India Hackathon 2026</span>
+      </div>
+      <div class="font-mono text-[11px] text-slate-500">
+        Team Techronauts (Hardware Category)
+      </div>
+    </div>
+  </footer>
+
+  <!-- SCRIPT LOGIC ENGINE -->
+  <script>
+    // State Model
+    const state = {
+      stage: 'prep', // 'prep' or 'dispense'
+      pod: { id: 'immunity', name: 'Immunity Pod', water: 400, temp: 88 },
+      cupCount: 1,
+      dilutionVal: 1,
+      storedKwatha: 0, // mL
+      chamberKwatha: 0, // mL
+      temp: 25.0,
+      weight: 0,
+      isProcessing: false,
+      pidData: Array(30).fill(25)
+    };
+
+    // Canvas Engine Handles
+    let appCanvas, appCtx, pidCanvas, pidCtx;
+    let animFrame;
+
+    window.addEventListener('DOMContentLoaded', () => {
+      initCanvases();
+      renderApplianceCanvas();
+      renderPIDGraph();
+    });
+
+    function initCanvases() {
+      appCanvas = document.getElementById('appliance-canvas');
+      appCtx = appCanvas.getContext('2d');
+      pidCanvas = document.getElementById('pid-graph-canvas');
+      pidCtx = pidCanvas.getContext('2d');
+
+      resizeCanvas();
+      window.addEventListener('resize', resizeCanvas);
+    }
+
+    function resizeCanvas() {
+      if (!appCanvas) return;
+      appCanvas.width = appCanvas.clientWidth;
+      appCanvas.height = appCanvas.clientHeight;
+      pidCanvas.width = pidCanvas.clientWidth;
+      pidCanvas.height = pidCanvas.clientHeight;
+    }
+
+    // Modal Toggle Helper
+    function toggleModal(id) {
+      const el = document.getElementById(id);
+      el.classList.toggle('hidden');
+    }
+
+    // Switch Stages
+    function switchStage(stageName) {
+      if (state.isProcessing) return;
+      state.stage = stageName;
+
+      const btnPrep = document.getElementById('btn-mode-prep');
+      const btnDisp = document.getElementById('btn-mode-dispense');
+      const panelPrep = document.getElementById('panel-prep');
+      const panelDisp = document.getElementById('panel-dispense');
+
+      if (stageName === 'prep') {
+        btnPrep.className = "px-4 py-2 rounded-xl text-xs font-bold border transition-all active-tab flex items-center space-x-1.5";
+        btnDisp.className = "px-4 py-2 rounded-xl text-xs font-bold border border-transparent text-slate-400 hover:text-white transition-all flex items-center space-x-1.5";
+        panelPrep.classList.remove('hidden');
+        panelDisp.classList.add('hidden');
+        updateStatus('System Ready • Stage 1: Preparation');
+      } else {
+        btnDisp.className = "px-4 py-2 rounded-xl text-xs font-bold border transition-all active-tab flex items-center space-x-1.5";
+        btnPrep.className = "px-4 py-2 rounded-xl text-xs font-bold border border-transparent text-slate-400 hover:text-white transition-all flex items-center space-x-1.5";
+        panelDisp.classList.remove('hidden');
+        panelPrep.classList.add('hidden');
+        updateStatus('System Ready • Stage 2: Dispensing');
+      }
+    }
+
+    // Pod Selection Handler
+    function selectPod(podType) {
+      if (state.isProcessing) return;
+
+      const pods = {
+        immunity: { id: 'immunity', name: 'Immunity Pod', water: 400, temp: 88 },
+        digestive: { id: 'digestive', name: 'Digestive Pod', water: 380, temp: 85 },
+        respiratory: { id: 'respiratory', name: 'Respiratory Pod', water: 420, temp: 90 }
+      };
+
+      state.pod = pods[podType];
+
+      ['immunity', 'digestive', 'respiratory'].forEach(p => {
+        const el = document.getElementById('pod-' + p);
+        if (p === podType) {
+          el.className = "p-3 rounded-xl border border-emerald-500 bg-emerald-950/50 text-left hover:border-emerald-400 transition-all pod-card-active";
+        } else {
+          el.className = "p-3 rounded-xl border border-slate-800 bg-slate-900/60 text-left hover:border-emerald-400 transition-all";
+        }
+      });
+
+      document.getElementById('param-water').innerText = state.pod.water + ' mL';
+      document.getElementById('param-temp').innerText = state.pod.temp + '.0°C (PID)';
+      logConsole('> Selected Pod: ' + state.pod.name + '. Water: ' + state.pod.water + 'mL, Temp: ' + state.pod.temp + '°C');
+    }
+
+    // Cup Selection
+    function selectCupCount(count) {
+      state.cupCount = count;
+      [1, 2, 3, 4].forEach(c => {
+        const btn = document.getElementById('cup-' + c);
+        if (c === count) {
+          btn.className = "py-2.5 rounded-xl border font-bold text-xs cup-btn-active";
+        } else {
+          btn.className = "py-2.5 rounded-xl border border-slate-800 bg-slate-900/60 font-bold text-xs text-slate-300";
+        }
+      });
+    }
+
+    // Dilution Slider Handler
+    function onDilutionChange(val) {
+      state.dilutionVal = val;
+      const label = document.getElementById('dilution-label');
+      if (val == 1) label.innerText = "1:1 Pure Decoction";
+      else if (val == 2) label.innerText = "1:1.5 Mild Dilution";
+      else label.innerText = "1:2 Light Herbal Tea";
+    }
+
+    // UI Updates
+    function updateStatus(msg) {
+      document.getElementById('sys-status-text').innerText = msg;
+    }
+
+    function logConsole(msg) {
+      document.getElementById('log-console').innerText = msg;
+    }
+
+    function updateSensorsDisplay() {
+      document.getElementById('sys-temp-display').innerHTML = `<i class="fa-solid fa-temperature-high"></i> ${state.temp.toFixed(1)}°C`;
+      document.getElementById('sys-weight-display').innerHTML = `<i class="fa-solid fa-weight-scale"></i> ${Math.round(state.weight)}g Mass`;
+      document.getElementById('chamber-vol-readout').innerText = `${Math.round(state.chamberKwatha)} mL`;
+      document.getElementById('storage-vol-readout').innerText = `${Math.round(state.storedKwatha)} mL`;
+    }
+
+    // Hardware Spec Explorer
+    function showHardwareSpec(module) {
+      const drawer = document.getElementById('spec-detail-box');
+      const title = document.getElementById('spec-title');
+      const desc = document.getElementById('spec-desc');
+
+      const specs = {
+        mcu: { title: "STM32F407 ARM Cortex M4", text: "Runs PID temperature calculation loop @ 100Hz. Interfaces with HX711 ADC, SSR relays, and pump solenoid drivers." },
+        loadcell: { title: "HX711 24-Bit ADC + Strain Gauge", text: "Continuously weighs extraction chamber. Triggers endpoint reduction when water mass drops to exactly 25% of initial input." },
+        chamber: { title: "Food-Grade Stainless Steel 316", text: "Boasts superior acid & herbal corrosion resistance compared to SS 304. Features an integrated 1200W heating element." },
+        pumps: { title: "Dual Peristaltic Dosing Pumps", text: "Self-priming food-safe silicone tube pumps delivering metered 25 mL/cup volume precision for custom dilution ratios." }
+      };
+
+      drawer.classList.remove('hidden');
+      title.innerText = specs[module].title;
+      desc.innerText = specs[module].text;
+    }
+
+    // Decoction Process Simulator
+    function startDecoctionCycle() {
+      if (state.isProcessing) return;
+      state.isProcessing = true;
+
+      const btn = document.getElementById('btn-start-prep');
+      btn.disabled = true;
+      btn.classList.add('opacity-50');
+
+      logConsole('> Step 1/5: Pod RFID verified. Filling water tank...');
+      updateStatus('Step 1: Adding Water');
+
+      let step = 0;
+      let targetWater = state.pod.water;
+      let targetTemp = state.pod.temp;
+
+      // Fill Phase
+      const fillInterval = setInterval(() => {
+        state.chamberKwatha += 40;
+        state.weight += 40;
+        updateSensorsDisplay();
+
+        if (state.chamberKwatha >= targetWater) {
+          state.chamberKwatha = targetWater;
+          state.weight = targetWater;
+          clearInterval(fillInterval);
+
+          // Heating & Reduction Phase
+          logConsole('> Step 2/5: PID Heating & Active Stirring engaged...');
+          updateStatus('Step 2 & 3: Controlled Heating & 1/4th Reduction');
+
+          const cookInterval = setInterval(() => {
+            // Heating PID curve
+            if (state.temp < targetTemp) {
+              state.temp += 2.5;
+            } else {
+              state.temp = targetTemp + (Math.random() * 0.8 - 0.4); // PID jitter
+            }
+
+            // Reduction
+            if (state.chamberKwatha > targetWater * 0.25) {
+              state.chamberKwatha -= 8;
+              state.weight -= 8;
+            } else {
+              // Complete
+              clearInterval(cookInterval);
+              state.chamberKwatha = targetWater * 0.25;
+              state.weight = state.chamberKwatha;
+
+              logConsole('> Step 4/5: 1/4th Reduction reached! Filtering into storage reservoir...');
+              updateStatus('Step 4/5: Transferring to Storage');
+
+              setTimeout(() => {
+                state.storedKwatha += state.chamberKwatha;
+                state.chamberKwatha = 0;
+                state.weight = 0;
+                state.temp = 30.0;
+                updateSensorsDisplay();
+
+                logConsole('> Process Complete! Fresh Kwatha stored in holding chamber.');
+                updateStatus('Batch Ready • Switch to Stage 2 to Dispense');
+
+                state.isProcessing = false;
+                btn.disabled = false;
+                btn.classList.remove('opacity-50');
+              }, 1500);
+            }
+
+            pushPIDData(state.temp);
+            updateSensorsDisplay();
+          }, 300);
+        }
+      }, 150);
+    }
+
+    // Dispensing Process Simulator
+    function startDispensingCycle() {
+      if (state.isProcessing) return;
+      if (state.storedKwatha <= 0) {
+        alert("Storage reservoir is empty! Run Stage 1 preparation first.");
+        return;
+      }
+
+      state.isProcessing = true;
+      const btn = document.getElementById('btn-start-dispense');
+      btn.disabled = true;
+
+      const serveVolume = state.cupCount * 25; // 25 mL per cup
+      logConsole(`> Metering ${state.cupCount} cup(s) [${serveVolume} mL total]...`);
+      updateStatus('Dispensing Active');
+
+      setTimeout(() => {
+        state.storedKwatha = Math.max(0, state.storedKwatha - serveVolume);
+        updateSensorsDisplay();
+        logConsole(`> Successfully dispensed ${state.cupCount} cup(s)! Enjoy fresh Kwatha.`);
+        updateStatus('Dispense Complete');
+
+        state.isProcessing = false;
+        btn.disabled = false;
+      }, 2000);
+    }
+
+    // Auto Rinse Cycle
+    function startAutoRinse() {
+      if (state.isProcessing) return;
+      state.isProcessing = true;
+      logConsole('> Flushing SS 316 extraction chamber with 92°C hot water...');
+      updateStatus('Auto-Sanitization Cycle Active');
+
+      setTimeout(() => {
+        logConsole('> Cleaning cycle complete. Appliance sanitized.');
+        updateStatus('System Ready • Cleaned');
+        state.isProcessing = false;
+      }, 2000);
+    }
+
+    // PID Data Array Handler
+    function pushPIDData(val) {
+      state.pidData.shift();
+      state.pidData.push(val);
+      renderPIDGraph();
+    }
+
+    // Render HTML5 Canvas Graphics Schematics
+    function renderApplianceCanvas() {
+      if (!appCtx) return;
+      const w = appCanvas.width;
+      const h = appCanvas.height;
+
+      appCtx.clearRect(0, 0, w, h);
+
+      // Background Grid Lines
+      appCtx.strokeStyle = 'rgba(16, 185, 129, 0.08)';
+      appCtx.lineWidth = 1;
+      for (let x = 0; x < w; x += 20) {
+        appCtx.beginPath(); appCtx.moveTo(x, 0); appCtx.lineTo(x, h); appCtx.stroke();
+      }
+      for (let y = 0; y < h; y += 20) {
+        appCtx.beginPath(); appCtx.moveTo(0, y); appCtx.lineTo(w, y); appCtx.stroke();
+      }
+
+      // Draw Extraction Chamber Tank
+      const cx = w * 0.3;
+      const cy = h * 0.45;
+      const cw = 110;
+      const ch = 130;
+
+      appCtx.fillStyle = '#0f172a';
+      appCtx.strokeStyle = '#34d399';
+      appCtx.lineWidth = 2;
+      appCtx.strokeRect(cx, cy, cw, ch);
+
+      // Liquid inside Chamber
+      if (state.chamberKwatha > 0) {
+        const fillHeight = (state.chamberKwatha / 420) * (ch - 10);
+        appCtx.fillStyle = 'rgba(245, 158, 11, 0.7)';
+        appCtx.fillRect(cx + 5, cy + ch - fillHeight - 5, cw - 10, fillHeight);
+      }
+
+      // Chamber Text Label
+      appCtx.fillStyle = '#ffffff';
+      appCtx.font = '10px JetBrains Mono';
+      appCtx.fillText('EXTRACTION TANK', cx + 10, cy - 8);
+
+      // Draw Storage Tank
+      const sx = w * 0.7;
+      const sy = h * 0.45;
+      appCtx.strokeRect(sx, sy, cw, ch);
+
+      if (state.storedKwatha > 0) {
+        const fillHeight = (state.storedKwatha / 400) * (ch - 10);
+        appCtx.fillStyle = 'rgba(16, 185, 129, 0.7)';
+        appCtx.fillRect(sx + 5, sy + ch - fillHeight - 5, cw - 10, fillHeight);
+      }
+
+      appCtx.fillStyle = '#ffffff';
+      appCtx.fillText('STORAGE TANK', sx + 15, sy - 8);
+
+      // Flow Pipe connecting tanks
+      appCtx.strokeStyle = state.isProcessing ? '#f59e0b' : '#334155';
+      appCtx.lineWidth = 4;
+      appCtx.beginPath();
+      appCtx.moveTo(cx + cw, cy + ch / 2);
+      appCtx.lineTo(sx, sy + ch / 2);
+      appCtx.stroke();
+
+      animFrame = requestAnimationFrame(renderApplianceCanvas);
+    }
+
+    // Render Live PID Temperature Curve Graph
+    function renderPIDGraph() {
+      if (!pidCtx) return;
+      const w = pidCanvas.width;
+      const h = pidCanvas.height;
+
+      pidCtx.clearRect(0, 0, w, h);
+
+      // Draw Target Corridor
+      pidCtx.fillStyle = 'rgba(16, 185, 129, 0.1)';
+      pidCtx.fillRect(0, h * 0.1, w, h * 0.3);
+
+      // Graph Line
+      pidCtx.beginPath();
+      pidCtx.strokeStyle = '#fbbf24';
+      pidCtx.lineWidth = 2;
+
+      const step = w / (state.pidData.length - 1);
+      state.pidData.forEach((val, idx) => {
+        const y = h - (val / 100) * h;
+        const x = idx * step;
+        if (idx === 0) pidCtx.moveTo(x, y);
+        else pidCtx.lineTo(x, y);
+      });
+
+      pidCtx.stroke();
+    }
+  </script>
+</body>
+</html>
